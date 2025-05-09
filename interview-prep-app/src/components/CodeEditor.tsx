@@ -48,6 +48,37 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
     setCode(defaultCode[monacoLanguage] || defaultCode['javascript']);
   }, [monacoLanguage]);
 
+  // Handler for Monaco Editor's onMount event to fix resizing issues
+  const handleEditorDidMount = (editor: any) => {
+    // Add a window resize listener to ensure editor layout is updated
+    const handleResize = () => {
+      editor.layout();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Handle parent container resize (using ResizeObserver if available)
+    if (typeof ResizeObserver !== 'undefined') {
+      const editorElement = editor.getDomNode();
+      if (editorElement && editorElement.parentElement) {
+        const resizeObserver = new ResizeObserver(() => {
+          editor.layout();
+        });
+        resizeObserver.observe(editorElement.parentElement);
+        
+        // Cleanup observer on unmount
+        return () => {
+          resizeObserver.disconnect();
+          window.removeEventListener('resize', handleResize);
+        };
+      }
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  };
+
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       setCode(value);
@@ -99,7 +130,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
         </div>
       </div>
 
-      <div className="flex-grow">
+      <div className="flex-grow relative">
         <Editor
           height="100%"
           defaultLanguage={monacoLanguage}
@@ -107,6 +138,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
           value={code}
           theme={theme}
           onChange={handleEditorChange}
+          onMount={handleEditorDidMount}
           options={{
             minimap: { enabled: true },
             formatOnType: true,

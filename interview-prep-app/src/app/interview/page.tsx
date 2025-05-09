@@ -12,6 +12,8 @@ const ProblemDescription = dynamic(() => import('@/components/ProblemDescription
 export default function InterviewPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [splitPosition, setSplitPosition] = useState(33); // Default split at 33%
+  const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const language = searchParams.get('language');
@@ -48,6 +50,45 @@ export default function InterviewPage() {
     }
   }, [router, language]);
 
+  // Handle mouse down event on the resizer
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    e.preventDefault();
+  };
+
+  // Handle mouse move event for resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const container = document.getElementById('split-container');
+      if (!container) return;
+      
+      // Calculate percentage position
+      const containerRect = container.getBoundingClientRect();
+      const newPosition = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+      // Limit the range (min 20%, max 80%)
+      if (newPosition >= 20 && newPosition <= 80) {
+        setSplitPosition(newPosition);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -77,14 +118,23 @@ export default function InterviewPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Problem Description Panel - 1/3 width */}
-      <div className="w-1/3 p-4 overflow-auto">
+    <div id="split-container" className="flex min-h-screen bg-gray-50 relative">
+      {/* Problem Description Panel - Resizable width */}
+      <div style={{ width: `${splitPosition}%` }} className="p-4 overflow-auto">
         <ProblemDescription focusArea={getFocusArea()} />
       </div>
       
-      {/* Code Editor Panel - 2/3 width */}
-      <div className="w-2/3">
+      {/* Resizer handle */}
+      <div 
+        className="w-2 hover:w-4 bg-gray-300 hover:bg-indigo-500 cursor-col-resize active:bg-indigo-700 transition-all flex items-center justify-center"
+        onMouseDown={handleMouseDown}
+        style={{ cursor: isDragging ? 'col-resize' : 'col-resize' }}
+      >
+        <div className="h-8 w-1 bg-gray-500 rounded-full opacity-50"></div>
+      </div>
+      
+      {/* Code Editor Panel - Remaining width */}
+      <div style={{ width: `${100 - splitPosition}%` }}>
         <CodeEditor language={getEditorLanguage()} />
       </div>
     </div>

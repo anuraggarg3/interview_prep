@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Sample problems for different focus areas
 const dsaProblems = [
@@ -99,44 +99,65 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea }) =>
   });
   
   const [showHints, setShowHints] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Ensure the container adapts to size changes
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      // Just having the observer is enough to trigger re-renders on resize
+    });
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md overflow-y-auto max-h-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">{selectedProblem.title}</h2>
-        <span className={`px-3 py-1 rounded-full text-sm ${
-          selectedProblem.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-          selectedProblem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
-          {selectedProblem.difficulty}
-        </span>
-      </div>
-      
-      <div className="border-t border-gray-200 pt-4">
-        <pre className="whitespace-pre-wrap text-gray-700 font-mono text-sm">
-          {selectedProblem.description}
-        </pre>
-      </div>
-      
-      <div className="mt-6">
-        <button
-          onClick={() => setShowHints(!showHints)}
-          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-        >
-          {showHints ? 'Hide Hints' : 'Show Hints'}
-        </button>
+    <div 
+      ref={containerRef}
+      className="bg-white rounded-lg shadow-md h-full flex flex-col"
+    >
+      <div className="p-4 flex-grow overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">{selectedProblem.title}</h2>
+          <span className={`px-3 py-1 rounded-full text-sm ${
+            selectedProblem.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+            selectedProblem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
+          }`}>
+            {selectedProblem.difficulty}
+          </span>
+        </div>
         
-        {showHints && (
-          <div className="mt-3 space-y-2">
-            {selectedProblem.hints.map((hint, index) => (
-              <div key={index} className="bg-indigo-50 p-3 rounded-md text-sm text-gray-700">
-                <span className="font-medium text-indigo-700">Hint {index + 1}: </span>
-                {hint}
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="border-t border-gray-200 pt-4">
+          <pre className="whitespace-pre-wrap text-gray-700 font-mono text-sm">
+            {selectedProblem.description}
+          </pre>
+        </div>
+        
+        <div className="mt-6">
+          <button
+            onClick={() => setShowHints(!showHints)}
+            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          >
+            {showHints ? 'Hide Hints' : 'Show Hints'}
+          </button>
+          
+          {showHints && (
+            <div className="mt-3 space-y-2">
+              {selectedProblem.hints.map((hint, index) => (
+                <div key={index} className="bg-indigo-50 p-3 rounded-md text-sm text-gray-700">
+                  <span className="font-medium text-indigo-700">Hint {index + 1}: </span>
+                  {hint}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

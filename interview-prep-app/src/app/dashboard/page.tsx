@@ -55,6 +55,17 @@ export default function Dashboard() {
     router.push('/');
   };
 
+  const handleStartInterview = () => {
+    // For DSA focus, we will navigate to the code editor
+    if (user?.interviewPreferences?.focusArea === 'DSA') {
+      router.push(`/interview?language=${user.interviewPreferences.programmingLanguage || 'JavaScript'}`);
+    } else {
+      // For other focus areas, we'll still navigate to the interview page
+      // but without a specific language parameter
+      router.push('/interview');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -126,6 +137,7 @@ export default function Dashboard() {
           <p className="text-gray-600 mb-6">Ready to practice? Start a mock interview based on your preferences.</p>
           
           <button
+            onClick={handleStartInterview}
             className="bg-indigo-600 text-white py-3 px-6 rounded-md hover:bg-indigo-700 transition duration-200 font-medium"
           >
             Start Interview Session

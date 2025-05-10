@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 // Sample problems for different focus areas
 const dsaProblems = [
@@ -87,7 +87,11 @@ interface ProblemDescriptionProps {
   focusArea: string;
 }
 
-const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea }) => {
+// Expose methods through forwardRef
+const ProblemDescription = forwardRef<
+  { getCurrentProblem: () => any },
+  ProblemDescriptionProps
+>(({ focusArea }, ref) => {
   // We could have different problems based on the focus area
   // Currently we're just using DSA problems as a demo
   const problems = focusArea === 'DSA' ? dsaProblems : dsaProblems;
@@ -100,6 +104,11 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea }) =>
   
   const [showHints, setShowHints] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Expose getCurrentProblem method to parent
+  useImperativeHandle(ref, () => ({
+    getCurrentProblem: () => selectedProblem
+  }));
 
   // Ensure the container adapts to size changes
   useEffect(() => {
@@ -161,6 +170,9 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea }) =>
       </div>
     </div>
   );
-};
+});
+
+// Add display name for debugging
+ProblemDescription.displayName = 'ProblemDescription';
 
 export default ProblemDescription; 

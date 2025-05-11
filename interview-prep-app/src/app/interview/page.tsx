@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-
+import { VoiceChat } from './Interview-assistant';
 // Dynamically import components to prevent SSR issues
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), { ssr: false });
 const ProblemDescription = dynamic(() => import('@/components/ProblemDescription'), { ssr: false });
@@ -123,7 +123,7 @@ export default function InterviewPage() {
       <div style={{ width: `${splitPosition}%` }} className="p-4 overflow-auto">
         <ProblemDescription focusArea={getFocusArea()} />
       </div>
-      
+      <VoiceChat scrapedContent={getFocusArea()} />
       {/* Resizer handle */}
       <div 
         className="w-2 hover:w-4 bg-gray-300 hover:bg-indigo-500 cursor-col-resize active:bg-indigo-700 transition-all flex items-center justify-center"

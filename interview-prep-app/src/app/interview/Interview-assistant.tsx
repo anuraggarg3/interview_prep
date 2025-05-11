@@ -4,7 +4,7 @@ import { RealtimeClient } from '@openai/realtime-api-beta';
 import { ItemType } from '@openai/realtime-api-beta/dist/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '@/lib/wavtools/index.js';
 
-import { X, Edit, Zap } from 'react-feather';
+import { X, Mic, Play, RefreshCw } from 'react-feather';
 import { Button } from '@mui/material';
 
 
@@ -66,6 +66,10 @@ ${scrapedContent}
 
   const [items, setItems] = useState<ItemType[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
 
   /**
    * Connect to conversation:
@@ -184,7 +188,7 @@ ${scrapedContent}
 
     client.updateSession({ instructions: instructions });
     client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
-    client.updateSession({ voice: 'alloy' });
+    client.updateSession({ voice: 'echo' });
 
     client.on('error', (event: any) => console.error(event));
     client.on('conversation.interrupted', async () => {
@@ -218,21 +222,96 @@ ${scrapedContent}
     };
   }, []);
 
+
+
+  // Handle drag start
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  // Handle drag movement
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      
+      // Keep button within viewport bounds
+      const maxX = window.innerWidth - 150;
+      const maxY = window.innerHeight - 60;
+      
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  // Update position on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition(prev => ({
+        x: Math.min(prev.x, window.innerWidth - 150),
+        y: Math.min(prev.y, window.innerHeight - 60)
+      }));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   /**
    * Render the application
    */
   return (
     <div>
-      <Button
-        variant="contained"
-        color={isConnected ? "error" : "primary"}
-        endIcon={isConnected ? <X /> : <Zap />}
-              onClick={
-                isConnected ? disconnectConversation : connectConversation
-              }
-            >
-              {isConnected ? 'Disconnect' : 'Connect'}
-            </Button>
+      <div 
+        className="fixed z-50 cursor-move"
+        style={{ 
+          left: `${position.x}px`, 
+          top: `${position.y}px`,
+          transition: isDragging ? 'none' : 'all 0.1s ease'
+        }}
+        onMouseDown={handleMouseDown}
+      >
+        <Button
+          variant="contained"
+          size="large"
+          className={`shadow-lg transition-all duration-300 ${isDragging ? 'scale-105' : ''}`}
+          style={{
+            backgroundColor: isConnected ? '#ef4444' : '#4f46e5',
+            borderRadius: '24px',
+            padding: '10px 20px',
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          startIcon={isConnected ? <X /> : <Mic />}
+          onClick={
+            isConnected ? disconnectConversation : connectConversation
+          }
+        >
+              {isConnected ? 'End Interview' : 'Start Interview'}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -69,7 +69,7 @@ const LoginForm = () => {
             id="email"
             type="email"
             {...register('email')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
             placeholder="your@email.com"
             disabled={isLoading}
           />
@@ -86,7 +86,7 @@ const LoginForm = () => {
             id="password"
             type="password"
             {...register('password')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-700"
             placeholder="••••••••"
             disabled={isLoading}
           />

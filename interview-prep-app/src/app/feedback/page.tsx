@@ -109,7 +109,7 @@ export default function FeedbackPage() {
         if (!response.ok) {
           throw new Error('Failed to generate feedback');
         }
-        
+
         const feedbackData = await response.json();
         console.log("Feedback generated successfully" ,feedbackData);
         
@@ -163,13 +163,13 @@ export default function FeedbackPage() {
           
           <div className="mb-6">
             <div className="bg-gray-50 p-4 rounded-md mb-4">
-              <p className="text-sm font-semibold text-gray-500 mb-1">Hint Requests</p>
-              <p className="font-medium">{feedback?.hintCount} times</p>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Hint Requests</p>
+              <p className="font-medium text-gray-600">{feedback?.hintCount} times</p>
             </div>
           </div>
           
           {/* Render AI Feedback using markdown */}
-          <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: feedback?.content ? convertMarkdownToHtml(feedback.content) : '' }}></div>
+          <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: feedback?.content ? convertMarkdownToHtml(feedback.content) : '' }}></div>
         </div>
         
         <div className="flex justify-between">

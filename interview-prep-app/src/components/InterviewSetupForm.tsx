@@ -104,7 +104,7 @@ const InterviewSetupForm = () => {
             id="experienceLevel"
             type="text"
             {...register('experienceLevel')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
             placeholder="e.g., 2 years"
             disabled={isLoading}
           />
@@ -114,13 +114,13 @@ const InterviewSetupForm = () => {
         </div>
         
         <div>
-          <label htmlFor="focusArea" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="focusArea" className="block text-sm font-medium text-gray-700 mb-1 ">
             Main Focus Area
           </label>
           <select
             id="focusArea"
             {...register('focusArea')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
             disabled={isLoading}
           >
             <option value="">Select focus area</option>
@@ -141,7 +141,7 @@ const InterviewSetupForm = () => {
             <select
               id="programmingLanguage"
               {...register('programmingLanguage')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
               disabled={isLoading}
             >
               <option value="">Select language</option>

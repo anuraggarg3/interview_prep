@@ -100,24 +100,24 @@ export default function Dashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-sm text-gray-500 mb-1">Experience Level</p>
-              <p className="font-medium">{user?.interviewPreferences?.experienceLevel || 'Not specified'}</p>
+              <p className="font-medium text-gray-600 mb-1">Experience Level</p>
+              <p className="font-medium text-gray-500">{user?.interviewPreferences?.experienceLevel || 'Not specified'}</p>
             </div>
             
             <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-sm text-gray-500 mb-1">Focus Area</p>
-              <p className="font-medium">{user?.interviewPreferences?.focusArea || 'Not specified'}</p>
+              <p className="font-medium text-gray-600 mb-1">Focus Area</p>
+              <p className="font-medium text-gray-500">{user?.interviewPreferences?.focusArea || 'Not specified'}</p>
             </div>
             
             <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-sm text-gray-500 mb-1">Interviewer Voice</p>
-              <p className="font-medium">{user?.interviewPreferences?.interviewerGender || 'Not specified'}</p>
+              <p className="font-medium text-gray-600 mb-1">Interviewer Voice</p>
+              <p className="font-medium text-gray-500">{user?.interviewPreferences?.interviewerGender || 'Not specified'}</p>
             </div>
             
             {user?.interviewPreferences?.focusArea === 'DSA' && (
               <div className="bg-gray-50 p-4 rounded-md">
-                <p className="text-sm text-gray-500 mb-1">Programming Language</p>
-                <p className="font-medium">{user?.interviewPreferences?.programmingLanguage || 'Not specified'}</p>
+                <p className="font-medium text-gray-600 mb-1">Programming Language</p>
+                <p className="font-medium text-gray-500">{user?.interviewPreferences?.programmingLanguage || 'Not specified'}</p>
               </div>
             )}
           </div>

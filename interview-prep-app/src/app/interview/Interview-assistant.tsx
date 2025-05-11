@@ -12,9 +12,10 @@ type Props = {
   scrapedContent: string;
   problemTitle: string;
   problemDescription: string;
+  codeContext: string;
 };
 
-export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription }) => {
+export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext }) => {
   const apiKey =process.env.OPENAI_API_KEY || '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';
   const instructions = `SYSTEM SETTINGS:
 ------
@@ -27,6 +28,7 @@ INSTRUCTIONS:
 - Keep your responses concise and professional, under 200 characters when possible.
 - Focus on assessing the candidate's technical abilities in a structured manner.
 - Provide constructive feedback when appropriate.
+- If the candidate asks for hints, review their current code context and provide targeted guidance based on it.
 
 ------
 PERSONALITY:
@@ -39,6 +41,8 @@ INTERVIEW CONTEXT:
 The candidate is working on a problem related to: ${scrapedContent}.
 Problem Title: ${problemTitle}.
 Problem Description: ${problemDescription}.
+Code Context:
+${codeContext}
 Please tailor your questions and scenarios based on this context.
 `;
 

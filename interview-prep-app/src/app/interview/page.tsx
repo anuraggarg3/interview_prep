@@ -16,6 +16,7 @@ export default function InterviewPage() {
   const [splitPosition, setSplitPosition] = useState(33); // Default split at 33%
   const [isDragging, setIsDragging] = useState(false);
   const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
+  const [editorCode, setEditorCode] = useState<string>('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const language = searchParams.get('language');
@@ -129,6 +130,7 @@ export default function InterviewPage() {
         scrapedContent={getFocusArea()}
         problemTitle={selectedProblem?.title ?? ''}
         problemDescription={selectedProblem?.description ?? ''}
+        codeContext={editorCode}
       />
       {/* Resizer handle */}
       <div 
@@ -141,7 +143,7 @@ export default function InterviewPage() {
       
       {/* Code Editor Panel - Remaining width */}
       <div style={{ width: `${100 - splitPosition}%` }}>
-        <CodeEditor language={getEditorLanguage()} />
+        <CodeEditor language={getEditorLanguage()} onCodeChange={setEditorCode} />
       </div>
     </div>
   );

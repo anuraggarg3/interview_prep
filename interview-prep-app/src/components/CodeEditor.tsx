@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 type CodeEditorProps = {
   language: string;
+  onCodeChange?: (code: string) => void;
 }
 
 // Map the user-friendly language name to Monaco Editor language ID
@@ -37,7 +38,7 @@ const editorThemes = [
   { label: 'High Contrast', value: 'hc-black' },
 ];
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ language, onCodeChange }) => {
   const [code, setCode] = useState<string>('');
   const [theme, setTheme] = useState<string>('vs-dark');
   const monacoLanguage = languageMap[language] || 'javascript';
@@ -45,7 +46,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
   
   useEffect(() => {
     // Set the default code snippet based on the language
-    setCode(defaultCode[monacoLanguage] || defaultCode['javascript']);
+    const initial = defaultCode[monacoLanguage] || defaultCode['javascript'];
+    setCode(initial);
+    if (onCodeChange) onCodeChange(initial);
   }, [monacoLanguage]);
 
   // Handler for Monaco Editor's onMount event to fix resizing issues
@@ -82,6 +85,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language }) => {
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       setCode(value);
+      if (onCodeChange) onCodeChange(value);
     }
   };
 

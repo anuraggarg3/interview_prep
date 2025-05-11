@@ -2,87 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-// Sample problems for different focus areas
-const dsaProblems = [
-  {
-    id: 1,
-    title: 'Two Sum',
-    difficulty: 'Easy',
-    description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
-    
-You may assume that each input would have exactly one solution, and you may not use the same element twice.
-    
-Example 1:
-Input: nums = [2,7,11,15], target = 9
-Output: [0,1]
-Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
-    
-Example 2:
-Input: nums = [3,2,4], target = 6
-Output: [1,2]`,
-    hints: [
-      'Consider using a hash map to store previously seen values.',
-      'For each number, check if target - number is already in the hash map.',
-      'Time complexity can be O(n) if you use a hash map approach.'
-    ],
-  },
-  {
-    id: 2,
-    title: 'Valid Parentheses',
-    difficulty: 'Easy',
-    description: `Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
-
-An input string is valid if:
-1. Open brackets must be closed by the same type of brackets.
-2. Open brackets must be closed in the correct order.
-3. Every close bracket has a corresponding open bracket of the same type.
-
-Example 1:
-Input: s = "()"
-Output: true
-
-Example 2:
-Input: s = "()[]{}"
-Output: true
-
-Example 3:
-Input: s = "(]"
-Output: false`,
-    hints: [
-      'Consider using a stack data structure.',
-      'Push opening brackets onto the stack.',
-      'When encountering a closing bracket, check if it matches the top of the stack.'
-    ],
-  },
-  {
-    id: 3,
-    title: 'Merge Two Sorted Lists',
-    difficulty: 'Easy',
-    description: `You are given the heads of two sorted linked lists list1 and list2.
-
-Merge the two lists in a one sorted list. The list should be made by splicing together the nodes of the first two lists.
-
-Return the head of the merged linked list.
-
-Example 1:
-Input: list1 = [1,2,4], list2 = [1,3,4]
-Output: [1,1,2,3,4,4]
-
-Example 2:
-Input: list1 = [], list2 = []
-Output: []
-
-Example 3:
-Input: list1 = [], list2 = [0]
-Output: [0]`,
-    hints: [
-      'You can create a dummy head to simplify the logic.',
-      'Compare the values of the two lists and append the smaller one to your result list.',
-      'Don\'t forget to handle the case when one list is empty but the other isn\'t.'
-    ],
-  },
-];
-
 export type Problem = {
   id: number;
   title: string;
@@ -97,40 +16,40 @@ interface ProblemDescriptionProps {
 }
 
 const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea, onSelect }) => {
-  // We could have different problems based on the focus area
-  // Currently we're just using DSA problems as a demo
-  const problems = focusArea === 'DSA' ? dsaProblems : dsaProblems;
-  
-  // Randomly select a problem for the session
-  const [selectedProblem] = useState<Problem>(() => {
-    const randomIndex = Math.floor(Math.random() * problems.length);
-    return problems[randomIndex];
-  });
-  
-  // Notify parent of the selected problem
-  useEffect(() => {
-    if (onSelect) {
-      onSelect(selectedProblem);
-    }
-  }, [onSelect, selectedProblem]);
-  
+  const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
   const [showHints, setShowHints] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Ensure the container adapts to size changes
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      // Just having the observer is enough to trigger re-renders on resize
-    });
-    
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-    
-    return () => {
-      resizeObserver.disconnect();
+    const fetchProblem = async () => {
+      try {
+        const randomId = Math.floor(Math.random() * 3500) + 1;
+        const res = await fetch(`/api/problem/${randomId}`);
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        const problem: Problem = {
+          id: randomId,
+          title: data.title,
+          description: data.content,
+          hints: data.hints || [],
+          difficulty: data.difficulty
+        };
+        setSelectedProblem(problem);
+        onSelect?.(problem);
+      } catch (error) {
+        console.error('Error fetching problem:', error);
+      }
     };
-  }, []);
+    fetchProblem();
+  }, [onSelect]);
+
+  if (!selectedProblem) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-500">Loading problem...</div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -148,13 +67,12 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea, onSe
             {selectedProblem.difficulty}
           </span>
         </div>
-        
         <div className="border-t border-gray-200 pt-4">
-          <pre className="whitespace-pre-wrap text-gray-700 font-mono text-sm">
-            {selectedProblem.description}
-          </pre>
+          <div
+            className="text-gray-700 leading-relaxed space-y-4"
+            dangerouslySetInnerHTML={{ __html: selectedProblem.description }}
+          />
         </div>
-        
         <div className="mt-6">
           <button
             onClick={() => setShowHints(!showHints)}
@@ -162,7 +80,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea, onSe
           >
             {showHints ? 'Hide Hints' : 'Show Hints'}
           </button>
-          
           {showHints && (
             <div className="mt-3 space-y-2">
               {selectedProblem.hints.map((hint, index) => (

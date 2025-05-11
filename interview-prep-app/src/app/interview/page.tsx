@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import type { Problem } from '@/components/ProblemDescription';
 import { VoiceChat } from './Interview-assistant';
+import { useInterviewContext } from '@/context/InterviewContext';
 // Dynamically import components to prevent SSR issues
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), { ssr: false });
 const ProblemDescription = dynamic(() => import('@/components/ProblemDescription'), { ssr: false });
@@ -17,9 +18,11 @@ export default function InterviewPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
   const [editorCode, setEditorCode] = useState<string>('');
+  const [conversationItems, setConversationItems] = useState<any[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
   const language = searchParams.get('language');
+  const { setInterviewData } = useInterviewContext();
 
   useEffect(() => {
     // Get user info from localStorage
@@ -120,10 +123,26 @@ export default function InterviewPage() {
     return user?.interviewPreferences?.focusArea || 'DSA';
   };
 
+  const handleSubmitSolution = () => {
+    // Store conversation data in context instead of localStorage
+    setInterviewData({
+      items: conversationItems,
+      problem: selectedProblem,
+      code: editorCode,
+      focusArea: getFocusArea()
+    });
+    
+    router.push('/feedback');
+  };
+
+  const handleConversationUpdate = (items: any[]) => {
+    setConversationItems(items);
+  };
+  console.log("conversationItems",conversationItems);
   return (
     <div id="split-container" className="flex min-h-screen bg-gray-50 relative">
       {/* Problem Description Panel - Resizable width */}
-      <div style={{ width: `${splitPosition}%` }} className="p-4 overflow-auto">
+      <div style={{ width: `${splitPosition}%` }} className="p-4 overflow-auto h-screen">
         <ProblemDescription focusArea={getFocusArea()} onSelect={setSelectedProblem} />
       </div>
       <VoiceChat
@@ -132,6 +151,7 @@ export default function InterviewPage() {
         problemDescription={selectedProblem?.description ?? ''}
         codeContext={editorCode}
         interviewerGender={user.interviewPreferences?.interviewerGender || 'Male'}
+        onConversationUpdate={handleConversationUpdate}
       />
       {/* Resizer handle */}
       <div 
@@ -143,8 +163,18 @@ export default function InterviewPage() {
       </div>
       
       {/* Code Editor Panel - Remaining width */}
-      <div style={{ width: `${100 - splitPosition}%` }}>
+      <div style={{ width: `${100 - splitPosition}%` }} className="flex flex-col">
         <CodeEditor language={getEditorLanguage()} onCodeChange={setEditorCode} />
+        
+        {/* Submit Solution Button */}
+        <div className="p-1 bg-gray-100 border-t border-gray-300 flex justify-center">
+          <button
+            onClick={handleSubmitSolution}
+            className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200 font-medium"
+          >
+            Submit Solution for Feedback
+          </button>
+        </div>
       </div>
     </div>
   );

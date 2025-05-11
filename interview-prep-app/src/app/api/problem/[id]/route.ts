@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 // Proxy API route to fetch LeetCode problems and avoid CORS errors
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   try {
     const res = await fetch(`https://leetcode-api-pied.vercel.app/problem/${id}`);
     if (!res.ok) {

@@ -14,9 +14,10 @@ type Props = {
   problemDescription: string;
   codeContext: string;
   interviewerGender: 'Male' | 'Female';
+  onConversationUpdate?: (items: ItemType[]) => void;
 };
 
-export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext, interviewerGender }) => {
+export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext, interviewerGender, onConversationUpdate }) => {
   const apiKey =process.env.OPENAI_API_KEY || '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';
   const instructions = `SYSTEM SETTINGS:
 ------
@@ -120,7 +121,7 @@ Please tailor your questions and scenarios based on this context.
    */
   const disconnectConversation = useCallback(async () => {
     setIsConnected(false);
-    setItems([]);
+    // setItems([]);
 
     const client = clientRef.current;
     const wavRecorder = wavRecorderRef.current;
@@ -293,6 +294,13 @@ Please tailor your questions and scenarios based on this context.
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Add effect to notify parent component when items change
+  useEffect(() => {
+    if (onConversationUpdate) {
+      onConversationUpdate(items);
+    }
+  }, [items, onConversationUpdate]);
 
   /**
    * Render the application

@@ -93,14 +93,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, onCodeChange }) => {
     setTheme(e.target.value);
   };
 
-  const handleSubmit = () => {
-    // Here you can submit the code for evaluation
-    console.log('Submitting code:', code);
-    // You could send this to an API endpoint for assessment
-  };
-
   return (
-    <div className="flex flex-col w-full h-screen">
+    <div className="flex flex-col w-full h-[94vh]">
       <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">
@@ -124,12 +118,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, onCodeChange }) => {
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
           >
             Back
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
-          >
-            Submit Solution
           </button>
         </div>
       </div>

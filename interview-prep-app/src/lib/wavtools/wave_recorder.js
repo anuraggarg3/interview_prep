@@ -237,9 +237,16 @@ export class WavRecorder {
       throw new Error('Could not request user media');
     }
     try {
-      const config = { audio: true };
+      // Configure audio constraints for noise suppression, echo cancellation, and auto gain control
+      const config = {
+        audio: {
+          noiseSuppression: true,
+          echoCancellation: true,
+          autoGainControl: true,
+        },
+      };
       if (deviceId) {
-        config.audio = { deviceId: { exact: deviceId } };
+        config.audio.deviceId = { exact: deviceId };
       }
       this.stream = await navigator.mediaDevices.getUserMedia(config);
     } catch (err) {

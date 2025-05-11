@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+import type { Problem } from '@/components/ProblemDescription';
 import { VoiceChat } from './Interview-assistant';
 // Dynamically import components to prevent SSR issues
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), { ssr: false });
@@ -14,6 +15,7 @@ export default function InterviewPage() {
   const [loading, setLoading] = useState(true);
   const [splitPosition, setSplitPosition] = useState(33); // Default split at 33%
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const language = searchParams.get('language');
@@ -121,9 +123,13 @@ export default function InterviewPage() {
     <div id="split-container" className="flex min-h-screen bg-gray-50 relative">
       {/* Problem Description Panel - Resizable width */}
       <div style={{ width: `${splitPosition}%` }} className="p-4 overflow-auto">
-        <ProblemDescription focusArea={getFocusArea()} />
+        <ProblemDescription focusArea={getFocusArea()} onSelect={setSelectedProblem} />
       </div>
-      <VoiceChat scrapedContent={getFocusArea()} />
+      <VoiceChat
+        scrapedContent={getFocusArea()}
+        problemTitle={selectedProblem?.title ?? ''}
+        problemDescription={selectedProblem?.description ?? ''}
+      />
       {/* Resizer handle */}
       <div 
         className="w-2 hover:w-4 bg-gray-300 hover:bg-indigo-500 cursor-col-resize active:bg-indigo-700 transition-all flex items-center justify-center"

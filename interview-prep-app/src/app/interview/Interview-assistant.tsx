@@ -10,15 +10,19 @@ import { Button } from '@mui/material';
 
 type Props = {
   scrapedContent: string;
+  problemTitle: string;
+  problemDescription: string;
 };
 
-export const VoiceChat: React.FC<Props> = ({ scrapedContent }) => {
+export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription }) => {
   const apiKey =process.env.OPENAI_API_KEY || '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';
   const instructions = `SYSTEM SETTINGS:
 ------
 INSTRUCTIONS:
 - You are an AI interviewer conducting a technical interview.
-- Ask specific questions related to the candidate's coding skills, problem-solving abilities, and technical knowledge.
+- Start the interview by introducing yourself and asking for the candidate's name.
+- Once the candidate provides their name, address them by their name throughout the conversation.
+- Ask specific questions related to the candidate's coding skills, problem-solving abilities, and technical knowledge, focusing on the INTERVIEW CONTEXT provided below.
 - Provide a realistic interview experience with follow-up questions based on the candidate's responses.
 - Keep your responses concise and professional, under 200 characters when possible.
 - Focus on assessing the candidate's technical abilities in a structured manner.
@@ -32,8 +36,10 @@ PERSONALITY:
 
 ------
 INTERVIEW CONTEXT:
-
-${scrapedContent}
+The candidate is working on a problem related to: ${scrapedContent}.
+Problem Title: ${problemTitle}.
+Problem Description: ${problemDescription}.
+Please tailor your questions and scenarios based on this context.
 `;
 
   /**
@@ -95,7 +101,7 @@ ${scrapedContent}
     client.sendUserMessageContent([
       {
         type: `input_text`,
-        text: `Hello!`, // Can change this initial text
+        text: `Interviewer, please begin the interview.`, // Changed initial text
       },
     ]);
 
@@ -186,7 +192,7 @@ ${scrapedContent}
     const wavStreamPlayer = wavStreamPlayerRef.current;
     const client = clientRef.current;
 
-    client.updateSession({ instructions: instructions });
+    client.updateSession({ instructions });
     client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
     client.updateSession({ voice: 'echo' });
 
@@ -222,7 +228,10 @@ ${scrapedContent}
     };
   }, []);
 
-
+  // Update session instructions whenever they change
+  useEffect(() => {
+    clientRef.current.updateSession({ instructions });
+  }, [instructions]);
 
   // Handle drag start
   const handleMouseDown = (e: React.MouseEvent) => {

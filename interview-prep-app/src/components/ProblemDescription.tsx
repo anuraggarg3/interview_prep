@@ -83,20 +83,36 @@ Output: [0]`,
   },
 ];
 
+export type Problem = {
+  id: number;
+  title: string;
+  difficulty: string;
+  description: string;
+  hints: string[];
+};
+
 interface ProblemDescriptionProps {
   focusArea: string;
+  onSelect?: (problem: Problem) => void;
 }
 
-const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea }) => {
+const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ focusArea, onSelect }) => {
   // We could have different problems based on the focus area
   // Currently we're just using DSA problems as a demo
   const problems = focusArea === 'DSA' ? dsaProblems : dsaProblems;
   
   // Randomly select a problem for the session
-  const [selectedProblem] = useState(() => {
+  const [selectedProblem] = useState<Problem>(() => {
     const randomIndex = Math.floor(Math.random() * problems.length);
     return problems[randomIndex];
   });
+  
+  // Notify parent of the selected problem
+  useEffect(() => {
+    if (onSelect) {
+      onSelect(selectedProblem);
+    }
+  }, [onSelect, selectedProblem]);
   
   const [showHints, setShowHints] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

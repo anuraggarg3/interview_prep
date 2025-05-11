@@ -144,7 +144,12 @@ export default function InterviewPage() {
       
       {/* Code Editor Panel - Remaining width */}
       <div style={{ width: `${100 - splitPosition}%` }}>
-        <CodeEditor language={getEditorLanguage()} onCodeChange={setEditorCode} />
+        <CodeEditor 
+          language={getEditorLanguage()} 
+          onCodeChange={setEditorCode} 
+          problemId={selectedProblem?.id}
+          problemTitle={selectedProblem?.title}
+        />
       </div>
     </div>
   );

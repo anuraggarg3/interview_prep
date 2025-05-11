@@ -7,6 +7,19 @@ import { WavRecorder, WavStreamPlayer } from '@/lib/wavtools/index.js';
 import { X, Mic, Play, RefreshCw } from 'react-feather';
 import { Button } from '@mui/material';
 
+// Define the structure for tracking interview metrics
+interface InterviewMetrics {
+  hintsRequested: number;
+  communicationRating: number;
+  problemSolvingRating: number;
+  startTime: Date | null;
+  endTime: Date | null;
+  messages: Array<{
+    role: 'user' | 'interviewer';
+    content: string;
+    timestamp: Date;
+  }>;
+}
 
 type Props = {
   scrapedContent: string;
@@ -30,6 +43,8 @@ INSTRUCTIONS:
 - Focus on assessing the candidate's technical abilities in a structured manner.
 - Provide constructive feedback when appropriate.
 - If the candidate asks for hints, review their current code context and provide targeted guidance based on it.
+- Track when the candidate asks for hints specifically by starting your response with "HINT: ".
+- At the end of the interview, provide a brief assessment of the candidate's performance.
 
 ------
 PERSONALITY:
@@ -80,88 +95,160 @@ Please tailor your questions and scenarios based on this context.
   const [position, setPosition] = useState({ x: 20, y: window.innerHeight - 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [interviewMetrics, setInterviewMetrics] = useState<InterviewMetrics>({
+    hintsRequested: 0,
+    communicationRating: 0,
+    problemSolvingRating: 0,
+    startTime: null,
+    endTime: null,
+    messages: []
+  });
 
+  /**
+   * Disconnect and reset conversation state
+   */
+  const disconnectConversation = useCallback(async () => {
+    try {
+      setIsConnected(false);
+      setItems([]);
+
+      // Record end time of interview
+      setInterviewMetrics(prev => ({
+        ...prev,
+        endTime: new Date()
+      }));
+
+      const client = clientRef.current;
+      const wavRecorder = wavRecorderRef.current;
+      const wavStreamPlayer = wavStreamPlayerRef.current;
+
+      // First pause recording to stop audio chunks from being processed
+      if (wavRecorder && wavRecorder.getStatus && wavRecorder.getStatus() === 'recording') {
+        await wavRecorder.pause();
+      }
+      
+      // Reset the chunk processor to an empty function
+      if (wavRecorder && wavRecorder.record) {
+        await wavRecorder.record(() => {}, 8192);
+        await wavRecorder.pause();
+      }
+      
+      // Now disconnect the client if it's connected
+      if (client && client.isConnected && typeof client.isConnected === 'function' && client.isConnected()) {
+        client.disconnect();
+      }
+      
+      // Clean up recorder and player
+      if (wavRecorder && wavRecorder.end) {
+        await wavRecorder.end();
+      }
+      
+      if (wavStreamPlayer && wavStreamPlayer.interrupt) {
+        await wavStreamPlayer.interrupt();
+      }
+
+      // Store the interview metrics in sessionStorage for later use
+      sessionStorage.setItem('interviewMetrics', JSON.stringify(interviewMetrics));
+    } catch (error) {
+      console.error('Error disconnecting from conversation:', error);
+      // Still update the UI state even if cleanup fails
+      setIsConnected(false);
+    }
+  }, [interviewMetrics]);
 
   /**
    * Connect to conversation:
    * WavRecorder takes speech input, WavStreamPlayer output, client is API client
    */
   const connectConversation = useCallback(async () => {
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    const wavStreamPlayer = wavStreamPlayerRef.current;
+    try {
+      const client = clientRef.current;
+      const wavRecorder = wavRecorderRef.current;
+      const wavStreamPlayer = wavStreamPlayerRef.current;
 
-    startTimeRef.current = new Date().toISOString();
-    setIsConnected(true);
-    setItems(client.conversation.getItems());
+      if (!client || !wavRecorder || !wavStreamPlayer) {
+        throw new Error('Required components not initialized');
+      }
 
-    // Connect to microphone
-    await wavRecorder.begin();
+      startTimeRef.current = new Date().toISOString();
+      
+      // Initialize interview metrics
+      setInterviewMetrics(prev => ({
+        ...prev,
+        startTime: new Date(),
+        messages: []
+      }));
 
-    // Connect to audio output
-    await wavStreamPlayer.connect();
+      // Connect to microphone
+      await wavRecorder.begin();
 
-    // Connect to realtime API
-    await client.connect();
-    client.sendUserMessageContent([
-      {
-        type: `input_text`,
-        text: `Interviewer, please begin the interview.`, // Changed initial text
-      },
-    ]);
+      // Connect to audio output
+      await wavStreamPlayer.connect();
 
-    if (client.getTurnDetectionType() === 'server_vad') {
-      await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+      try {
+        // Connect to realtime API
+        await client.connect();
+      } catch (connectError) {
+        console.error('Failed to connect to OpenAI Realtime API:', connectError);
+        alert('Could not connect to the interview assistant. Please check your internet connection and try again.');
+        throw connectError;
+      }
+      
+      // Only set connected state after successful connection
+      setIsConnected(true);
+      setItems(client.conversation.getItems());
+
+      // Send initial message
+      client.sendUserMessageContent([
+        {
+          type: `input_text`,
+          text: `Interviewer, please begin the interview.`
+        },
+      ]);
+
+      if (client.getTurnDetectionType() === 'server_vad') {
+        await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+      }
+    } catch (error) {
+      console.error('Error connecting to conversation:', error);
+      // Clean up if connection fails
+      await disconnectConversation();
     }
-  }, []);
-
-  /**
-   * Disconnect and reset conversation state
-   */
-  const disconnectConversation = useCallback(async () => {
-    setIsConnected(false);
-    setItems([]);
-
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    const wavStreamPlayer = wavStreamPlayerRef.current;
-
-    // First pause recording to stop audio chunks from being processed
-    if (wavRecorder.getStatus() === 'recording') {
-      await wavRecorder.pause();
-    }
-    
-    // Reset the chunk processor to an empty function
-    await wavRecorder.record(() => {}, 8192);
-    await wavRecorder.pause();
-    
-    // Now disconnect the client
-    client.disconnect();
-    
-    // Clean up recorder and player
-    await wavRecorder.end();
-    await wavStreamPlayer.interrupt();
-  }, []);
+  }, [disconnectConversation]);
 
   const deleteConversationItem = useCallback(async (id: string) => {
     const client = clientRef.current;
-    client.deleteItem(id);
+    if (client && client.deleteItem) {
+      client.deleteItem(id);
+    }
   }, []);
 
   /**
    * Switch between Manual <> VAD mode for communication
    */
   const changeTurnEndType = async (value: string) => {
-    const client = clientRef.current;
-    const wavRecorder = wavRecorderRef.current;
-    if (value === 'none' && wavRecorder.getStatus() === 'recording') {
-      await wavRecorder.pause();
-    }
-    client.updateSession({
-      turn_detection: value === 'none' ? null : { type: 'server_vad' },
-    });
-    if (value === 'server_vad' && client.isConnected()) {
-      await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+    try {
+      const client = clientRef.current;
+      const wavRecorder = wavRecorderRef.current;
+      
+      if (!client || !wavRecorder) {
+        console.error('Client or wavRecorder not initialized');
+        return;
+      }
+      
+      if (value === 'none' && wavRecorder.getStatus() === 'recording') {
+        await wavRecorder.pause();
+      }
+      
+      client.updateSession({
+        turn_detection: value === 'none' ? null : { type: 'server_vad' },
+      });
+      
+      if (value === 'server_vad' && client.isConnected && client.isConnected()) {
+        await wavRecorder.record((data) => client.appendInputAudio(data.mono));
+      }
+    } catch (error) {
+      console.error('Error changing turn end type:', error);
     }
   };
 
@@ -197,46 +284,127 @@ Please tailor your questions and scenarios based on this context.
     const wavStreamPlayer = wavStreamPlayerRef.current;
     const client = clientRef.current;
 
-    client.updateSession({ instructions });
-    client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
-    client.updateSession({ voice: interviewerGender === 'Female' ? 'shimmer' : 'echo' });
+    if (!client || !wavStreamPlayer) {
+      console.error('Client or wavStreamPlayer not initialized');
+      return;
+    }
 
-    client.on('error', (event: any) => console.error(event));
-    client.on('conversation.interrupted', async () => {
-      const trackSampleOffset = await wavStreamPlayer.interrupt();
-      if (trackSampleOffset?.trackId) {
-        const { trackId, offset } = trackSampleOffset;
-        await client.cancelResponse(trackId, offset);
-      }
-    });
-    client.on('conversation.updated', async ({ item, delta }: any) => {
-      const items = client.conversation.getItems();
-      if (delta?.audio) {
-        wavStreamPlayer.add16BitPCM(delta.audio, item.id);
-      }
-      if (item.status === 'completed' && item.formatted.audio?.length) {
-        const wavFile = await WavRecorder.decode(
-          item.formatted.audio,
-          24000,
-          24000
-        );
-        item.formatted.file = wavFile;
-      }
-      setItems(items);
-    });
+    try {
+      client.updateSession({ instructions });
+      client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
+      client.updateSession({ voice: interviewerGender === 'Female' ? 'shimmer' : 'echo' });
 
-    setItems(client.conversation.getItems());
+      client.on('error', (event: any) => console.error(event));
+      client.on('conversation.interrupted', async () => {
+        const trackSampleOffset = await wavStreamPlayer.interrupt();
+        if (trackSampleOffset?.trackId) {
+          const { trackId, offset } = trackSampleOffset;
+          await client.cancelResponse(trackId, offset);
+        }
+      });
+      client.on('conversation.updated', async ({ item, delta }: any) => {
+        const items = client.conversation.getItems();
+        if (delta?.audio) {
+          wavStreamPlayer.add16BitPCM(delta.audio, item.id);
+        }
+        if (item.status === 'completed' && item.formatted.audio?.length) {
+          const wavFile = await WavRecorder.decode(
+            item.formatted.audio,
+            24000,
+            24000
+          );
+          item.formatted.file = wavFile;
+        }
+        
+        // Process conversation for metrics
+        if (item.status === 'completed' && item.role === 'assistant' && item.formatted.text) {
+          // Check if the response contains a hint
+          if (item.formatted.text.startsWith('HINT:')) {
+            setInterviewMetrics(prev => ({
+              ...prev,
+              hintsRequested: prev.hintsRequested + 1
+            }));
+          }
+          
+          // Store the message for later analysis
+          setInterviewMetrics(prev => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                role: 'interviewer',
+                content: item.formatted.text,
+                timestamp: new Date()
+              }
+            ]
+          }));
+        }
+        
+        if (item.status === 'completed' && item.role === 'user' && item.formatted.text) {
+          // Store user messages for analysis
+          setInterviewMetrics(prev => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                role: 'user',
+                content: item.formatted.text,
+                timestamp: new Date()
+              }
+            ]
+          }));
+        }
+        
+        setItems(items);
+      });
+
+      setItems(client.conversation.getItems());
+    } catch (error) {
+      console.error('Error setting up realtime client:', error);
+    }
 
     return () => {
       // cleanup; resets to defaults
-      client.reset();
+      try {
+        if (client && client.reset) {
+          client.reset();
+        }
+      } catch (error) {
+        console.error('Error resetting client:', error);
+      }
     };
-  }, []);
+  }, [interviewerGender]);
 
   // Update session instructions whenever they change
   useEffect(() => {
-    clientRef.current.updateSession({ instructions });
+    try {
+      const client = clientRef.current;
+      if (client && client.updateSession) {
+        client.updateSession({ instructions });
+      }
+    } catch (error) {
+      console.error('Error updating session instructions:', error);
+    }
   }, [instructions]);
+
+  // Update metrics when code context changes
+  useEffect(() => {
+    try {
+      const client = clientRef.current;
+      if (isConnected && client && client.isConnected && typeof client.isConnected === 'function' && client.isConnected()) {
+        // Update the AI with the latest code context
+        client.sendUserMessageContent([
+          {
+            type: 'input_text',
+            text: `The current code context is: ${codeContext}`
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error sending code context to AI:', error);
+      // Don't crash the app if there's an error
+    }
+  }, [codeContext, isConnected]);
 
   // Handle drag start
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -328,4 +496,10 @@ Please tailor your questions and scenarios based on this context.
       </div>
     </div>
   );
+};
+
+// Export the interview metrics to make them available to other components
+export const getInterviewMetrics = (): InterviewMetrics | null => {
+  const metrics = sessionStorage.getItem('interviewMetrics');
+  return metrics ? JSON.parse(metrics) : null;
 };

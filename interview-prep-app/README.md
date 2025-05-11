@@ -1,14 +1,67 @@
 # Interview Prep Application
 
-A Next.js application for interview preparation with features for user authentication, email verification, and customized interview experiences.
+An application for practicing technical interviews with AI assistance and tracking your progress.
 
 ## Features
 
-- User registration and login with email verification
-- Interview preferences setup (experience level, focus area, interviewer voice preference)
-- Programming language selection for DSA interviews
-- Responsive UI with Tailwind CSS
-- MVC architecture for scalability
+- AI-powered mock interviews
+- Real-time code editor
+- Live feedback and assessment
+- Interview history tracking
+- Performance analytics dashboard
+
+## Technical Overview
+
+### Feedback Data Storage
+
+The application stores interview feedback data to allow users to review their performance over time. The feedback storage system works as follows:
+
+1. **During the Interview**:
+   - The application tracks various metrics like:
+     - Number of hints requested
+     - Communication quality
+     - Problem-solving approach
+     - Time spent on the problem
+
+2. **After Submission**:
+   - When a user submits their solution, the system:
+     - Analyzes their code quality
+     - Combines metrics from the interview
+     - Generates a comprehensive feedback report
+     - Assigns a unique ID to the feedback
+     - Stores it in the database
+
+3. **Feedback Persistence**:
+   - Feedback is stored in two places:
+     - Session storage for immediate access
+     - Backend database for long-term persistence
+   - This ensures feedback remains available even after page refreshes or returning to the app later
+
+4. **Dashboard Integration**:
+   - The user dashboard fetches all feedback records
+   - Displays a history of past interviews
+   - Shows performance trends over time
+   - Allows users to revisit detailed feedback
+
+### Data Flow
+
+```
+Interview Process → Metrics Collection → Solution Submission → Feedback Generation → Database Storage → Dashboard Display
+```
+
+## Implementation Details
+
+- The application uses a combination of client-side and server-side storage
+- In development, feedback is stored using a simulated persistent storage
+- In production, this would be replaced with a proper database like PostgreSQL
+- The API endpoints in `/api/feedback` handle both saving and retrieving feedback
+
+## Future Improvements
+
+- Add user authentication to associate feedback with specific user accounts
+- Implement advanced analytics for tracking improvement over time
+- Add feedback export functionality (PDF, CSV, etc.)
+- Integrate with external learning resources based on identified areas for improvement
 
 ## Tech Stack
 

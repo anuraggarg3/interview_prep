@@ -131,6 +131,7 @@ export default function InterviewPage() {
         problemTitle={selectedProblem?.title ?? ''}
         problemDescription={selectedProblem?.description ?? ''}
         codeContext={editorCode}
+        interviewerGender={user.interviewPreferences?.interviewerGender || 'Male'}
       />
       {/* Resizer handle */}
       <div 

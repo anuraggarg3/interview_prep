@@ -13,9 +13,10 @@ type Props = {
   problemTitle: string;
   problemDescription: string;
   codeContext: string;
+  interviewerGender: 'Male' | 'Female';
 };
 
-export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext }) => {
+export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext, interviewerGender }) => {
   const apiKey =process.env.OPENAI_API_KEY || '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';
   const instructions = `SYSTEM SETTINGS:
 ------
@@ -198,7 +199,7 @@ Please tailor your questions and scenarios based on this context.
 
     client.updateSession({ instructions });
     client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
-    client.updateSession({ voice: 'echo' });
+    client.updateSession({ voice: interviewerGender === 'Female' ? 'shimmer' : 'echo' });
 
     client.on('error', (event: any) => console.error(event));
     client.on('conversation.interrupted', async () => {

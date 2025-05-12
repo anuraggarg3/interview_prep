@@ -33,6 +33,9 @@ export const sendVerificationEmail = async (email: string, verificationToken: st
     subject: 'Verify Your Email Address',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://i.ibb.co/vCCj2t9N/Chat-GPT-Image-May-12-2025-09-28-25-AM.png" alt="Interview Prep" style="max-width: 100%; height: 250px;">
+        </div>
         <h2 style="color: #333;">Verify Your Email Address</h2>
         <p>Thank you for signing up for Interview Prep. Please click the button below to verify your email address:</p>
         <a href="${verificationUrl}" style="display: inline-block; background-color: #4A46EC; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 15px 0;">Verify Email</a>

@@ -39,7 +39,7 @@ export const registerUser = async (req: NextRequest) => {
     });
 
     // Send verification email
-    await sendVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(email, verificationToken, name);
 
     return NextResponse.json(
       { message: 'Registration successful. Please verify your email.' },

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import InterviewSetupForm from '@/components/InterviewSetupForm';
+import Logo from '@/components/Logo';
 
 export default function InterviewSetup() {
   const router = useRouter();
@@ -16,14 +17,22 @@ export default function InterviewSetup() {
   }, [router]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600 mb-2">Interview Setup</h1>
-          <p className="text-gray-600">Customize your interview experience</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+      {/* Header */}
+      <header className="bg-transparent backdrop-blur-sm ">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Logo />
         </div>
-        <InterviewSetupForm />
-      </div>
-    </main>
+      </header>
+
+      <main className="flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          <div className="text-center mb-8 mt-8">
+            <h1 className="text-2xl font-extrabold text-indigo-500 mb-3 tracking-tight bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent drop-shadow-sm">Customize your interview experience</h1>
+          </div>
+          <InterviewSetupForm />
+        </div>
+      </main>
+    </div>
   );
 } 

@@ -7,6 +7,8 @@ export interface IUser extends mongoose.Document {
   password: string;
   isVerified: boolean;
   verificationToken: string | null;
+  resetPasswordToken: string | null;
+  resetPasswordExpires: Date | null;
   comparePassword: (password: string) => Promise<boolean>;
   interviewPreferences?: {
     experienceLevel?: string;
@@ -44,6 +46,14 @@ const UserSchema = new mongoose.Schema({
   },
   verificationToken: {
     type: String,
+    default: null,
+  },
+  resetPasswordToken: {
+    type: String,
+    default: null,
+  },
+  resetPasswordExpires: {
+    type: Date,
     default: null,
   },
   interviewPreferences: {

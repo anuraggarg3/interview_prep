@@ -52,7 +52,6 @@ const LoginForm = () => {
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Sign In to Interview Prep</h2>
       
       {error && (
         <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4">
@@ -93,6 +92,12 @@ const LoginForm = () => {
           {errors.password && (
             <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
           )}
+        </div>
+        
+        <div className="flex justify-end">
+          <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-800">
+            Forgot password?
+          </Link>
         </div>
         
         <button

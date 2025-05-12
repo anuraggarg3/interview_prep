@@ -49,7 +49,6 @@ const RegisterForm = () => {
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Create an Account</h2>
       
       {error && (
         <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4">

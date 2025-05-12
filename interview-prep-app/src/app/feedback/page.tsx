@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useInterviewContext } from '@/context/InterviewContext';
+import Logo from '@/components/Logo';
 
 export default function FeedbackPage() {
   const [loading, setLoading] = useState(true);
@@ -142,49 +143,67 @@ export default function FeedbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl w-full">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <Link href="/dashboard" className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200">
-            Return to Dashboard
-          </Link>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <Logo />
+          </div>
+        </header>
+
+        <div className="flex flex-col items-center justify-center p-4">
+          <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl w-full">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+            <p className="text-gray-700 mb-6">{error}</p>
+            <Link href="/dashboard" className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200">
+              Return to Dashboard
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-          <h1 className="text-2xl font-bold text-indigo-600 mb-2">Interview Feedback</h1>
-          <h2 className="text-lg text-gray-700 mb-6">Problem: {feedback?.problemTitle}</h2>
-          
-          <div className="mb-6">
-            <div className="bg-gray-50 p-4 rounded-md mb-4">
-              <p className="text-sm font-semibold text-gray-700 mb-1">Hint Requests</p>
-              <p className="font-medium text-gray-600">{feedback?.hintCount} times</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Logo />
+        </div>
+      </header>
+
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h1 className="text-2xl font-bold text-indigo-600 mb-2">Interview Feedback</h1>
+            <h2 className="text-lg text-gray-700 mb-6">Problem: {feedback?.problemTitle}</h2>
+            
+            <div className="mb-6">
+              <div className="bg-gray-50 p-4 rounded-md mb-4">
+                <p className="text-sm font-semibold text-gray-700 mb-1">Hint Requests</p>
+                <p className="font-medium text-gray-600">{feedback?.hintCount} times</p>
+              </div>
             </div>
+            
+            {/* Render AI Feedback using markdown */}
+            <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: feedback?.content ? convertMarkdownToHtml(feedback.content) : '' }}></div>
           </div>
           
-          {/* Render AI Feedback using markdown */}
-          <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: feedback?.content ? convertMarkdownToHtml(feedback.content) : '' }}></div>
-        </div>
-        
-        <div className="flex justify-between">
-          <Link href="/dashboard" className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200">
-            Return to Dashboard
-          </Link>
-          
-          <button 
-            onClick={() => {
-              router.push('/dashboard');
-            }}
-            className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200"
-          >
-            Complete Session
-          </button>
+          <div className="flex justify-between">
+            <Link href="/dashboard" className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200">
+              Return to Dashboard
+            </Link>
+            
+            <button 
+              onClick={() => {
+                router.push('/dashboard');
+              }}
+              className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition duration-200"
+            >
+              Complete Session
+            </button>
+          </div>
         </div>
       </div>
     </div>

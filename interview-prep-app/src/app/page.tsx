@@ -1,5 +1,6 @@
 import LoginForm from '@/components/auth/LoginForm';
 import { Metadata } from 'next';
+import Logo from '@/components/Logo';
 
 export const metadata: Metadata = {
   title: 'Login | Interview Prep',
@@ -8,14 +9,23 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600 mb-2">Interview Prep</h1>
-          <p className="text-gray-600">Practice your interview skills with AI-powered feedback</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+      {/* Header */}
+      <header className="bg-transparent backdrop-blur-sm ">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Logo />
         </div>
-        <LoginForm />
-      </div>
-    </main>
+      </header>
+
+      <main className="flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8 mt-12">
+            <h1 className="text-3xl font-bold text-indigo-600 mb-2">Welcome Back</h1>
+            <p className="text-gray-600">Practice your interview skills with AI-powered feedback</p>
+          </div>
+          <LoginForm />
+        </div>
+      </main>
+    </div>
   );
 }

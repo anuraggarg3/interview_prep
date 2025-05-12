@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 
 type User = {
   id: string;
@@ -79,7 +80,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-indigo-600">Interview Prep</h1>
+          <Logo />
           
           <div className="flex items-center space-x-4">
             <span className="text-gray-700">Welcome, {user?.name}</span>

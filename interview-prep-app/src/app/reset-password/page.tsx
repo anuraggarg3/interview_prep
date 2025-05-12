@@ -1,5 +1,6 @@
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 import Logo from '@/components/Logo';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: 'Reset Password | Interview Prep',
@@ -21,7 +22,9 @@ export default function ResetPasswordPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <ResetPasswordForm />
+        <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+          <ResetPasswordForm />
+        </Suspense>
       </div>
     </div>
   );

@@ -6,10 +6,24 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
-let cached = global.mongoose;
+// Define the type for the cached mongoose connection
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+// Define the global namespace to include mongoose property
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: { [key: string]: any } | undefined;
+}
+
+// Initialize the cached variable with a default value
+let cached: MongooseCache = (global.mongoose as MongooseCache) || { conn: null, promise: null };
+
+// Store the connection in the global object
+if (!global.mongoose) {
+  global.mongoose = cached as any;
 }
 
 async function dbConnect() {
@@ -31,4 +45,4 @@ async function dbConnect() {
   return cached.conn;
 }
 
-export default dbConnect; 
+export default dbConnect;

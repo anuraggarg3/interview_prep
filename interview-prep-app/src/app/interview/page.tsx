@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -11,7 +11,8 @@ import { useInterviewContext } from '@/context/InterviewContext';
 const CodeEditor = dynamic(() => import('@/components/CodeEditor'), { ssr: false });
 const ProblemDescription = dynamic(() => import('@/components/ProblemDescription'), { ssr: false });
 
-export default function InterviewPage() {
+// Client component that uses useSearchParams
+function InterviewContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [splitPosition, setSplitPosition] = useState(33); // Default split at 33%
@@ -138,7 +139,7 @@ export default function InterviewPage() {
   const handleConversationUpdate = (items: any[]) => {
     setConversationItems(items);
   };
-  console.log("conversationItems",conversationItems);
+
   return (
     <div id="split-container" className="flex min-h-screen bg-gray-50 relative">
       {/* Problem Description Panel - Resizable width */}
@@ -177,5 +178,18 @@ export default function InterviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function InterviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <InterviewContent />
+    </Suspense>
   );
 } 

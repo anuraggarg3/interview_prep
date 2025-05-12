@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 
-export default function VerifyEmail() {
+// Client component that uses useSearchParams
+function VerifyEmailContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,5 +74,24 @@ export default function VerifyEmail() {
         )}
       </div>
     </main>
+  );
+}
+
+// Main component with Suspense boundary
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mx-auto text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">Email Verification</h1>
+          <div className="flex flex-col items-center justify-center py-4">
+            <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 } 

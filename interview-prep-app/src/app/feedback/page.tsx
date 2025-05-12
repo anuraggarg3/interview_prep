@@ -44,82 +44,88 @@ export default function FeedbackPage() {
         
         console.log("Hint requests identified:", hintCount);
 
-        // Prepare data for the AI model to generate feedback
-        const feedbackPrompt = {
-          model: "gpt-4-turbo",
-          messages: [
-            {
-              role: "system", 
-              content: `You are an expert technical interviewer providing strict, detailed feedback on a coding interview. 
-              Analyze the conversation between interviewer and candidate, along with the candidate's final code.
-              Provide extremely critical feedback focusing on:
-              1. Problem solving approach (structured thinking, algorithm design)
-              2. Technical communication quality (clarity, precision, terminology use)
-              3. Code quality (correctness, efficiency, style)
-              4. Areas for improvement (be specific and direct)
-              5. Give a score out of 10 for the candidate's performance
-              6. Give a score out of 10 for the candidate's communication skills
-              7. Give a score out of 10 for the candidate's problem solving skills
-              8. Give a score out of 10 for the candidate's technical skills
-              9. Give a score out of 10 for the candidate's overall performance
-              10. Give a score out of 10 for the candidate's confidence
-              also tell how many times the candidate asked for hints
-              
-              Format your response with clear sections using markdown headers. Be brutally honest - point out even minor mistakes or hesitations.
-              Your feedback should be direct, actionable, and reflect the standards of top tech companies.`
-            },
-            {
-              role: "user",
-              content: `Here is the complete interview data:
-              
-              Problem: ${interviewData.problem?.title || 'Technical Interview'}
-              Problem Description: ${interviewData.problem?.description || 'No description available'}
-              
-              Conversation:
-              ${interviewData.items.map((item: any) => {
-                const role = item.role === 'user' ? 'Candidate' : 'Interviewer';
-                return `${role}: ${item.formatted?.text || '[audio response]'}`;
-              }).join('\n\n')}
-              
-              Final Code Solution:
-              \`\`\`
-              ${interviewData.code || 'No code submitted'}
-              \`\`\`
-              
-              Focus Area: ${interviewData.focusArea || 'General'}
-              Times Asked for Hints: ${hintCount}
-              
-              Please provide comprehensive, critical feedback on this candidate's performance.
-              also  tell how many times the candidate asked for hints`
-            }
-          ]
-        };
+        // Prepare messages for the OpenAI client
+        const messages = [
+          {
+            role: "system" as const, 
+            content: `You are an expert technical interviewer providing strict, detailed feedback on a coding interview. 
+            Analyze the conversation between interviewer and candidate, along with the candidate's final code.
+            Provide extremely critical feedback focusing on:
+            1. Problem solving approach (structured thinking, algorithm design)
+            2. Technical communication quality (clarity, precision, terminology use)
+            3. Code quality (correctness, efficiency, style)
+            4. Areas for improvement (be specific and direct)
+            5. Give a score out of 10 for the candidate's performance
+            6. Give a score out of 10 for the candidate's communication skills
+            7. Give a score out of 10 for the candidate's problem solving skills
+            8. Give a score out of 10 for the candidate's technical skills
+            9. Give a score out of 10 for the candidate's overall performance
+            10. Give a score out of 10 for the candidate's confidence
+            also tell how many times the candidate asked for hints
+            
+            Format your response with clear sections using markdown headers. Be brutally honest - point out even minor mistakes or hesitations.
+            Your feedback should be direct, actionable, and reflect the standards of top tech companies.`
+          },
+          {
+            role: "user" as const,
+            content: `Here is the complete interview data:
+            
+            Problem: ${interviewData.problem?.title || 'Technical Interview'}
+            Problem Description: ${interviewData.problem?.description || 'No description available'}
+            
+            Conversation:
+            ${interviewData.items.map((item: any) => {
+              const role = item.role === 'user' ? 'Candidate' : 'Interviewer';
+              return `${role}: ${item.formatted?.text || '[audio response]'}`;
+            }).join('\n\n')}
+            
+            Final Code Solution:
+            \`\`\`
+            ${interviewData.code || 'No code submitted'}
+            \`\`\`
+            
+            Focus Area: ${interviewData.focusArea || 'General'}
+            Times Asked for Hints: ${hintCount}
+            
+            Please provide comprehensive, critical feedback on this candidate's performance.
+            also tell how many times the candidate asked for hints`
+          }
+        ];
         
         console.log("Generating AI feedback...");
         
-        // Call OpenAI API for feedback generation
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY || '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'}`
-          },
-          body: JSON.stringify(feedbackPrompt)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to generate feedback');
+        try {
+          // Use our server-side API route instead of direct client call
+          const response = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ messages }),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API error: ${errorData.error || response.statusText}`);
+          }
+          
+          const data = await response.json();
+          console.log("Feedback response:", data);
+          
+          if (!data.content) {
+            throw new Error('Invalid response from API');
+          }
+          
+          setFeedback({
+            content: data.content,
+            problemTitle: interviewData.problem?.title || 'Technical Interview',
+            hintCount,
+            code: interviewData.code
+          });
+        } catch (apiError: any) {
+          console.error('API error:', apiError);
+          setError(`AI feedback generation failed: ${apiError.message || 'Unknown error'}`);
         }
-
-        const feedbackData = await response.json();
-        console.log("Feedback generated successfully" ,feedbackData);
-        
-        setFeedback({
-          content: feedbackData.choices[0].message.content,
-          problemTitle: interviewData.problem?.title || 'Technical Interview',
-          hintCount,
-          code: interviewData.code
-        });
         
       } catch (err) {
         console.error('Error generating feedback:', err);

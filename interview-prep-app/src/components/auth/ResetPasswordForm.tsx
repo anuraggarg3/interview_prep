@@ -95,6 +95,11 @@ const ResetPasswordForm = () => {
         </div>
       ) : (
         <>
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-0 text-center text-3xl font-bold text-gray-900 py-5">
+          Set a new password
+          </h2>
+        </div>
           <p className="text-gray-600 mb-6 text-center">
             Please enter your new password below.
           </p>

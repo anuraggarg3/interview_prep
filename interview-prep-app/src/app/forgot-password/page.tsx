@@ -15,11 +15,7 @@ export default function ForgotPasswordPage() {
           <Logo />
         </div>
       </header>
-      <div>
-      <h2 className="mt-6 text-center text-3xl font-bold text-gray-900 py-5">
-          Reset your password
-        </h2>
-      </div>
+
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <ForgotPasswordForm />

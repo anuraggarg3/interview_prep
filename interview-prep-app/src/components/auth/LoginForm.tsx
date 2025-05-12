@@ -61,6 +61,10 @@ const LoginForm = () => {
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
+        <div className="text-center mb-8 mt-2">
+            <h1 className="text-3xl font-bold text-indigo-600 mb-2">Welcome Back</h1>
+            <p className="text-gray-600 mt-5">Practice your interview skills with AI-powered feedback</p>
+          </div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>

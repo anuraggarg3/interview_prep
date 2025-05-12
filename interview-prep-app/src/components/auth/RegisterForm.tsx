@@ -64,6 +64,10 @@ const RegisterForm = () => {
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
+        <div className="text-center mb-8 mt-1">
+            <h1 className="text-3xl font-bold text-indigo-600">Create an Account</h1>
+            <p className="text-gray-600 mt-4">Get started with your interview preparation</p>
+          </div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Full Name
           </label>

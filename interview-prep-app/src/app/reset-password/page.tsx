@@ -15,11 +15,6 @@ export default function ResetPasswordPage() {
           <Logo />
         </div>
       </header>
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900 py-5">
-          Set a new password
-        </h2>
-      </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>

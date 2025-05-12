@@ -57,6 +57,11 @@ const ForgotPasswordForm = () => {
         </div>
       ) : (
         <>
+          <div>
+            <h2 className="mt-0 text-center text-3xl font-bold text-gray-900 py-5">
+              Reset your password
+            </h2>
+        </div>
           <p className="text-gray-600 mb-6 text-center">
             Enter your email address and we'll send you a link to reset your password.
           </p>

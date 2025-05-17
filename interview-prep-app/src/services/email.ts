@@ -34,7 +34,7 @@ export const sendVerificationEmail = async (email: string, verificationToken: st
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="https://i.ibb.co/vCCj2t9N/Chat-GPT-Image-May-12-2025-09-28-25-AM.png" alt="Interview Prep" style="max-width: 100%; height: 250px;">
+          <img src="https://64r1xuvnkudsrebo.public.blob.vercel-storage.com/ChatGPT%20Image%20May%2012%2C%202025%2C%2009_28_25%20AM-SfXSADxjuSodX7UvKYrmyMOZo90P4b.png" alt="Interview Prep" style="max-width: 100%; height: 250px;">
         </div>
         <h2 style="color: #333;">Verify Your Email Address</h2>
         <p>Hi ${name},</p>

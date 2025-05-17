@@ -5,7 +5,7 @@ import { ItemType } from '@openai/realtime-api-beta/dist/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '@/lib/wavtools/index.js';
 
 import { X, Mic, Play, RefreshCw } from 'react-feather';
-import { Button } from '@mui/material';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 
 
 type Props = {
@@ -18,7 +18,10 @@ type Props = {
 };
 
 export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext, interviewerGender, onConversationUpdate }) => {
-  const apiKey =process.env.OPENAI_API_KEY;
+  const [apiKey, setApiKey] = useState<string>('');
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState<boolean>(false);
+  const [apiKeyError, setApiKeyError] = useState<string>('');
+  
   const instructions = `SYSTEM SETTINGS:
 ------
 INSTRUCTIONS:
@@ -60,14 +63,7 @@ Please tailor your questions and scenarios based on this context.
   const wavStreamPlayerRef = useRef<WavStreamPlayer>(
     new WavStreamPlayer({ sampleRate: 24000 })
   );
-  const clientRef = useRef<RealtimeClient>(
-    new RealtimeClient(
-      {
-            apiKey: apiKey,
-            dangerouslyAllowAPIKeyInBrowser: true,
-          }
-    )
-  );
+  const clientRef = useRef<RealtimeClient | null>(null);
 
   /**
    * References for
@@ -82,13 +78,111 @@ Please tailor your questions and scenarios based on this context.
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
+  // Check for saved API key on component mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('openai_api_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
+
+  // Initialize RealtimeClient when API key changes
+  useEffect(() => {
+    if (apiKey) {
+      clientRef.current = new RealtimeClient({
+        apiKey: apiKey,
+        dangerouslyAllowAPIKeyInBrowser: true,
+      });
+
+      // Set up event listeners for the client
+      const client = clientRef.current;
+      const wavStreamPlayer = wavStreamPlayerRef.current;
+
+      client.updateSession({ instructions });
+      client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
+      client.updateSession({ voice: interviewerGender === 'Female' ? 'shimmer' : 'echo' });
+
+      client.on('error', (event: any) => console.error(event));
+      client.on('conversation.interrupted', async () => {
+        const trackSampleOffset = await wavStreamPlayer.interrupt();
+        if (trackSampleOffset?.trackId) {
+          const { trackId, offset } = trackSampleOffset;
+          await client.cancelResponse(trackId, offset);
+        }
+      });
+      client.on('conversation.updated', async ({ item, delta }: any) => {
+        const items = client.conversation.getItems();
+        if (delta?.audio) {
+          wavStreamPlayer.add16BitPCM(delta.audio, item.id);
+        }
+        if (item.status === 'completed' && item.formatted.audio?.length) {
+          const wavFile = await WavRecorder.decode(
+            item.formatted.audio,
+            24000,
+            24000
+          );
+          item.formatted.file = wavFile;
+        }
+        setItems(items);
+      });
+
+      setItems(client.conversation.getItems());
+
+      return () => {
+        // cleanup; resets to defaults
+        client.reset();
+      };
+    }
+  }, [apiKey, instructions, interviewerGender]);
+
+  // Update session instructions whenever they change
+  useEffect(() => {
+    if (clientRef.current && apiKey) {
+      clientRef.current.updateSession({ instructions });
+    }
+  }, [instructions, apiKey]);
+
+  /**
+   * Handle API key submission
+   */
+  const handleApiKeySubmit = () => {
+    if (!apiKey.trim()) {
+      setApiKeyError('Please enter your OpenAI API key');
+      return;
+    }
+    
+    // Simple format validation (not a comprehensive check)
+    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+      setApiKeyError('Please enter a valid OpenAI API key');
+      return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('openai_api_key', apiKey);
+    setApiKeyError('');
+    setApiKeyModalOpen(false);
+    
+    // Connect to conversation
+    connectConversation();
+  };
 
   /**
    * Connect to conversation:
    * WavRecorder takes speech input, WavStreamPlayer output, client is API client
    */
   const connectConversation = useCallback(async () => {
+    // Check if API key exists
+    if (!apiKey) {
+      setApiKeyModalOpen(true);
+      return;
+    }
+
     const client = clientRef.current;
+    if (!client) {
+      console.error('RealtimeClient not initialized');
+      return;
+    }
+
     const wavRecorder = wavRecorderRef.current;
     const wavStreamPlayer = wavStreamPlayerRef.current;
 
@@ -114,7 +208,7 @@ Please tailor your questions and scenarios based on this context.
     if (client.getTurnDetectionType() === 'server_vad') {
       await wavRecorder.record((data) => client.appendInputAudio(data.mono));
     }
-  }, []);
+  }, [apiKey]);
 
   /**
    * Disconnect and reset conversation state
@@ -124,6 +218,8 @@ Please tailor your questions and scenarios based on this context.
     // setItems([]);
 
     const client = clientRef.current;
+    if (!client) return;
+
     const wavRecorder = wavRecorderRef.current;
     const wavStreamPlayer = wavStreamPlayerRef.current;
 
@@ -146,6 +242,7 @@ Please tailor your questions and scenarios based on this context.
 
   const deleteConversationItem = useCallback(async (id: string) => {
     const client = clientRef.current;
+    if (!client) return;
     client.deleteItem(id);
   }, []);
 
@@ -154,6 +251,7 @@ Please tailor your questions and scenarios based on this context.
    */
   const changeTurnEndType = async (value: string) => {
     const client = clientRef.current;
+    if (!client) return;
     const wavRecorder = wavRecorderRef.current;
     if (value === 'none' && wavRecorder.getStatus() === 'recording') {
       await wavRecorder.pause();
@@ -183,61 +281,14 @@ Please tailor your questions and scenarios based on this context.
    * Set up VAD mode
    */
   useEffect(() => {
-    changeTurnEndType('server_vad');
+    if (apiKey && clientRef.current) {
+      changeTurnEndType('server_vad');
+    }
     
     return () => {
       // cleanup if needed
     };
-  }, []);
-
-  /**
-   * Core RealtimeClient and audio capture setup
-   * Set all of our instructions, tools, events and more
-   */
-  useEffect(() => {
-    const wavStreamPlayer = wavStreamPlayerRef.current;
-    const client = clientRef.current;
-
-    client.updateSession({ instructions });
-    client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
-    client.updateSession({ voice: interviewerGender === 'Female' ? 'shimmer' : 'echo' });
-
-    client.on('error', (event: any) => console.error(event));
-    client.on('conversation.interrupted', async () => {
-      const trackSampleOffset = await wavStreamPlayer.interrupt();
-      if (trackSampleOffset?.trackId) {
-        const { trackId, offset } = trackSampleOffset;
-        await client.cancelResponse(trackId, offset);
-      }
-    });
-    client.on('conversation.updated', async ({ item, delta }: any) => {
-      const items = client.conversation.getItems();
-      if (delta?.audio) {
-        wavStreamPlayer.add16BitPCM(delta.audio, item.id);
-      }
-      if (item.status === 'completed' && item.formatted.audio?.length) {
-        const wavFile = await WavRecorder.decode(
-          item.formatted.audio,
-          24000,
-          24000
-        );
-        item.formatted.file = wavFile;
-      }
-      setItems(items);
-    });
-
-    setItems(client.conversation.getItems());
-
-    return () => {
-      // cleanup; resets to defaults
-      client.reset();
-    };
-  }, []);
-
-  // Update session instructions whenever they change
-  useEffect(() => {
-    clientRef.current.updateSession({ instructions });
-  }, [instructions]);
+  }, [apiKey]);
 
   // Handle drag start
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -307,6 +358,42 @@ Please tailor your questions and scenarios based on this context.
    */
   return (
     <div>
+      {/* API Key Dialog */}
+      <Dialog open={apiKeyModalOpen} onClose={() => setApiKeyModalOpen(false)}>
+        <DialogTitle>Enter your OpenAI API Key</DialogTitle>
+        <DialogContent>
+          <p className="mb-4 text-gray-600">
+            To use the interview feature, please enter your OpenAI API key. 
+            Your key will be stored in your browser for future use.
+          </p>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="OpenAI API Key"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="sk-..."
+            error={!!apiKeyError}
+            helperText={apiKeyError}
+            className="mt-2"
+          />
+          <p className="mt-4 text-xs text-gray-500">
+            Your API key is stored locally and is only used to communicate with OpenAI services.
+          </p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setApiKeyModalOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleApiKeySubmit} color="primary" variant="contained">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <div 
         className="fixed z-50 cursor-move"
         style={{ 

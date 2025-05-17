@@ -18,7 +18,7 @@ type Props = {
 };
 
 export const VoiceChat: React.FC<Props> = ({ scrapedContent, problemTitle, problemDescription, codeContext, interviewerGender, onConversationUpdate }) => {
-  const apiKey =process.env.OPENAI_API_KEY || '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';
+  const apiKey =process.env.OPENAI_API_KEY;
   const instructions = `SYSTEM SETTINGS:
 ------
 INSTRUCTIONS:

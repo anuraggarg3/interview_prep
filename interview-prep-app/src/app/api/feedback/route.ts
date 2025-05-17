@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
+  const {
+    GITHUB_TOKEN
+  } = process.env;
+  if (!GITHUB_TOKEN) {
+    return NextResponse.json(
+      { error: 'GITHUB_TOKEN is not set' },
+      { status: 500 }
+    );
+  }
   try {
     const { messages } = await request.json();
     
@@ -15,11 +24,10 @@ export async function POST(request: NextRequest) {
     const endpoint = 'https://models.github.ai/inference';
     const modelName = 'openai/gpt-4o';
     // Using server-side environment variable
-    const token = process.env.GITHUB_TOKEN;
-    
+
     const client = new OpenAI({ 
       baseURL: endpoint, 
-      apiKey: token 
+      apiKey: GITHUB_TOKEN 
     });
     
     const response = await client.chat.completions.create({
